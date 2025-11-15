@@ -37,39 +37,39 @@ public class Gui {
         frame.setBackground(Color.darkGray);
         frame.getContentPane().setBackground(Color.darkGray);
 
-        title.setBackground(Color.gray);
-        title.setForeground(Color.white);
+        title.setBackground(Color.DARK_GRAY);
+        title.setForeground(Color.green);
         title.setHorizontalAlignment(JLabel.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 50));
+        title.setFont(new Font("Comic Sans MS", Font.BOLD, 50));
         title.setText("epic tuner");
         title.setOpaque(true);
 
         noteNameText.setBackground(Color.gray);
         noteNameText.setForeground(Color.white);
         noteNameText.setHorizontalAlignment(JLabel.CENTER);
-        noteNameText.setFont(new Font("Arial", Font.BOLD, 200));
-        noteNameText.setText("A");
+        noteNameText.setFont(new Font("Comic Sans MS", Font.BOLD, 200));
+        noteNameText.setText("<html>A<sub>4<sub></html>");
         noteNameText.setOpaque(true);
 
         frequencyText.setBackground(Color.gray);
         frequencyText.setForeground(Color.white);
         frequencyText.setHorizontalAlignment(JLabel.CENTER);
-        frequencyText.setFont(new Font("Arial", Font.BOLD, 100));
-        frequencyText.setText("100");
+        frequencyText.setFont(new Font("Comic Sans MS", Font.BOLD, 100));
+        frequencyText.setText("440");
         frequencyText.setOpaque(true);
 
-        centsLabelText.setBackground(Color.gray);
-        centsLabelText.setForeground(Color.white);
-        centsLabelText.setHorizontalAlignment(JLabel.CENTER);
-        centsLabelText.setVerticalAlignment(JLabel.BOTTOM);
-        centsValueText.setFont(new Font("Arial", Font.BOLD, 100));
-        centsLabelText.setText("CENTS: ");
+        // centsLabelText.setBackground(Color.gray);
+        // centsLabelText.setForeground(Color.white);
+        // centsLabelText.setHorizontalAlignment(JLabel.CENTER);
+        // centsLabelText.setVerticalAlignment(JLabel.BOTTOM);
+        // centsValueText.setFont(new Font("Comic Sans MS", Font.BOLD, 100));
+        // centsLabelText.setText("CENTS: ");
         
         centsValueText.setBackground(Color.gray);
         centsValueText.setForeground(Color.white);
         centsValueText.setHorizontalAlignment(JLabel.CENTER);
-        centsValueText.setFont(new Font("Arial", Font.BOLD, 100));
-        centsValueText.setText("1");
+        centsValueText.setFont(new Font("Comic Sans MS", Font.BOLD, 100));
+        centsValueText.setText("<html>Cents: <br>0.0</html>");
         centsValueText.setOpaque(true);
 
         titlePanel.setLayout(new BorderLayout());
@@ -104,7 +104,7 @@ public class Gui {
         constraints.weighty = 0;
         constraints.weighty = 0;
         constraints.gridheight = 1;
-        frame.add(centsLabelText, constraints);
+        // frame.add(centsLabelText, constraints);
 
         constraints.fill = GridBagConstraints.BOTH;
         constraints.gridy = 2;
@@ -125,18 +125,18 @@ public class Gui {
     }
 
     void updateFrequency(double frequency, String noteAndOctave, double cents){
-        frequencyText.setText(Double.toString(frequency));
+        frequencyText.setText("Hertz: " + Double.toString(frequency));
         noteNameText.setText(noteAndOctave);
-        centsValueText.setText(Double.toString(cents));
+        centsValueText.setText("<html> Cents: <br>" + Double.toString(cents) + "</html");
 
 
     }
 
     public void loudEnoughColor(boolean loudEnough) {
         if (loudEnough){
-            frequencyText.setBackground(Color.green);
+            frequencyText.setBackground(Color.blue);
         } else {
-            frequencyText.setBackground(Color.red);
+            frequencyText.setBackground(Color.gray);
         }    }
 
 

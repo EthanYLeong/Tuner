@@ -16,7 +16,7 @@ public class Tuner {
     Gui gui;
 
     TargetDataLine line;
-    AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
+    AudioFormat format = new AudioFormat(88200, 16, 1, true, false);
     DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     int numBytesRead;
@@ -54,15 +54,16 @@ public class Tuner {
         this.gui = gui;
 
         if (!AudioSystem.isLineSupported(info)) {
-            // Handle the error.
+            // ADD ERROR MESSAGE?
+            stopped = true;
         }
         // Obtain and open the line.
         try {
             line = (TargetDataLine) AudioSystem.getLine(info);
             line.open(format);
         } catch (LineUnavailableException ex) {
-            // Handle the error.
-            // ...
+            // ADD ERROR MESSAGE ?
+            stopped = true;
         }
 
         start();
@@ -74,54 +75,75 @@ public class Tuner {
         byte[] data = new byte[line.getBufferSize()/2];
         line.start();
         while (!stopped){
-            numBytesRead = line.read(data, 0, data.length);
-            double[] doubleArray = new double[data.length];
+
+            // Copy bytes from the line's buffer to data byte array
+            line.read(data, 0, data.length);
+
+            double[] sampleArray = new double[(data.length/2) + 1];
+
+            // Combine two bytes into one value, as its 2 bytes per sample
             for (int i = 0, counter = 0; i < data.length - 1; i += 2, counter++){
                 int low  = data[i] & 0xFF;
                 int high = data[i+1] & 0xFF;
                 short combined = (short) ((high << 8) | low);
                 double sample = (double) combined;
-                doubleArray[counter] = sample;
+                sampleArray[counter] = sample;
             }
 
+
+
+            // Grab largest amplitude (volume)
             double largestAmplitude = 0;
-            for (int i = 0; i < doubleArray.length; i++){
-                if (Math.abs(doubleArray[i]) > largestAmplitude){
-                    largestAmplitude = Math.abs(doubleArray[i]);
+            for (int i = 0; i < sampleArray.length; i++){
+                if (Math.abs(sampleArray[i]) > largestAmplitude){
+                    largestAmplitude = Math.abs(sampleArray[i]);
                 }
             }
-            if (largestAmplitude < 750){
+
+
+            if (largestAmplitude > 750){
+                loudEnough = true;
+            } else {
                 loudEnough = false;
-                gui.loudEnoughColor(loudEnough);
+            }
+
+            // Update color based on loud
+            gui.loudEnoughColor(loudEnough);
+
+            // Only run pitch detection if a sample has amplitude (volume) of certain size
+            if (!loudEnough){
                 continue;
             }
-            loudEnough = true;
-            gui.loudEnoughColor(loudEnough);
-            FFT.realForward(doubleArray);
+
+            // Feed array of amplitudes into fourier transform
+            // Transforms sampleArray into array of complex numbers
+            FFT.realForward(sampleArray);
+
             double strongestMagnitude = 0;
-            int mostFrequentBin = 1;
-            // start at index 2, as 1 and 0 contain info about mean, frequency bins start
-            // at index 2
-            for (int i = 2; i < doubleArray.length/2; i += 2){
-                double re = doubleArray[i];
-                double im = doubleArray[i+1];
+            int dominantFrequencyBin = 1;
+
+            // start at index 2, as 1 and 0 contain info about mean 
+            // frequency bins start at index 2
+            for (int i = 2; i < sampleArray.length/2; i += 2){
+                double re = sampleArray[i];
+                double im = sampleArray[i+1];
                 int frequencyBin = i/2; 
                 double magnitude = Math.sqrt((re * re) + (im * im));
                 if (magnitude > strongestMagnitude){
                     strongestMagnitude = magnitude;
-                    mostFrequentBin = frequencyBin;
+                    dominantFrequencyBin = frequencyBin;
                 }
-
             }
-            // num of cycles over time period / (seconds of time period)
-            double frequency = (mostFrequentBin * 44100.0)/doubleArray.length;
+
+            // num of cycles over time period / (length of each sample)
+            double frequency = (dominantFrequencyBin)/0.25;
+
             double numOfSemitones = 12 * (Math.log((frequency/440))/Math.log(2));
-            System.out.println(frequency + " semit " + numOfSemitones);
             double lower = Math.floor(numOfSemitones);
             double upper = Math.ceil(numOfSemitones);
             double closest = 0;
             String noteName = "";
-            if (numOfSemitones - lower > upper - numOfSemitones){
+            if (numOfSemitones - lower >= upper - numOfSemitones){
                 closest = upper;
             } else {
                 closest = lower;
@@ -136,7 +158,7 @@ public class Tuner {
             cents = Math.floor(cents * 10)/10;
             double octave = 4;
             // had to artificially lower C4 in order for C6 to be caputred
-            double octaveDifference = Math.log(frequency/261)/Math.log(2);
+            double octaveDifference = Math.log(frequency/261.6256)/Math.log(2);
             if (octaveDifference >= 0){
                 octaveDifference = Math.floor(octaveDifference);
                 octave += octaveDifference;
